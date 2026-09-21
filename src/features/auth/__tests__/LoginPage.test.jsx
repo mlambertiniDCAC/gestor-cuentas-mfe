@@ -41,6 +41,66 @@ describe("LoginPage", () => {
     await waitFor(() => expect(store.getState().auth.token).toBe("tok"));
   });
 
+  it("redirects to onboarding when the mail has no PSP identity", async () => {
+    const assignSpy = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, assign: assignSpy },
+    });
+    post.mockRejectedValueOnce({
+      response: {
+        status: 401,
+        data: { message: "no existe una cuenta PSP para ese mail" },
+      },
+    });
+    const store = renderPage();
+    fireEvent.change(screen.getByLabelText("Mail"), {
+      target: { value: "nuevo@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
+      target: { value: "secreta" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ingresar" }));
+    await waitFor(() => expect(assignSpy).toHaveBeenCalledTimes(1));
+    expect(store.getState().auth.token).toBeNull();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
+  });
+
+  it("does not redirect on wrong password", async () => {
+    const assignSpy = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, assign: assignSpy },
+    });
+    post.mockRejectedValueOnce({
+      response: {
+        status: 401,
+        data: { message: "mail o contraseña incorrectos" },
+      },
+    });
+    renderPage();
+    fireEvent.change(screen.getByLabelText("Mail"), {
+      target: { value: "a@b.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Contraseña"), {
+      target: { value: "x" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Ingresar" }));
+    expect(
+      await screen.findByText("mail o contraseña incorrectos")
+    ).toBeTruthy();
+    expect(assignSpy).not.toHaveBeenCalled();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
+  });
+
   it("shows the API error", async () => {
     post.mockRejectedValueOnce({
       response: { status: 401, data: { message: "credenciales inválidas" } },

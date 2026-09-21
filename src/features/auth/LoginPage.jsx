@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
 import { Formik } from "formik";
@@ -47,7 +48,11 @@ const validationSchema = Yup.object({
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  const { status, error } = useSelector((state) => state.auth);
+  const { status, error, needsOnboarding } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (needsOnboarding) window.location.assign(__ONBOARDING_PSP_URL__);
+  }, [needsOnboarding]);
 
   return (
     <Wrapper>
