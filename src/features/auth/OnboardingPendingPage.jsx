@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { Typography } from "src/components/Typography";
 import { Button } from "src/components/Button";
 import { logout } from "./authSlice";
+import { openOnboarding } from "src/lib/onboarding";
 
 const Wrapper = styled.div`
   display: flex;
@@ -36,7 +37,7 @@ const OnboardingPendingPage = () => {
           tone="brand"
           role="primary"
           type="button"
-          onClick={() => window.location.assign(__ONBOARDING_PSP_URL__)}
+          onClick={openOnboarding}
         >
           Completar alta
         </Button>

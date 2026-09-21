@@ -53,6 +53,19 @@ describe("Home", () => {
     expect(await screen.findByText("Activar cuenta CVU")).toBeTruthy();
   });
 
+  it("opens onboarding in a new tab from the activation CTA", async () => {
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
+    get.mockResolvedValueOnce({ data: { code: 200, data: [] } });
+    renderHome();
+    fireEvent.click(await screen.findByText("Activar cuenta CVU"));
+    expect(openSpy).toHaveBeenCalledWith(
+      expect.any(String),
+      "_blank",
+      "noopener,noreferrer"
+    );
+    openSpy.mockRestore();
+  });
+
   it("shows the wallet with balance, CVU and alias", async () => {
     get.mockResolvedValueOnce({
       data: { code: 200, data: [rawAccount(1, "mi.alias")] },
