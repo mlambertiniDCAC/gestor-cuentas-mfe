@@ -1,7 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../lib/axiosInstance";
 import { authStorage } from "../../lib/authStorage";
-import { getApiErrorMessage } from "../../lib/apiError";
+import {
+  getApiErrorMessage,
+  isMissingPspIdentityError,
+} from "../../lib/apiError";
 import { fetchMyAccounts } from "../account/store/accountActions";
 
 export const login = createAsyncThunk(
@@ -14,7 +17,10 @@ export const login = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(getApiErrorMessage(error));
+      return rejectWithValue({
+        message: getApiErrorMessage(error),
+        needsOnboarding: isMissingPspIdentityError(error),
+      });
     }
   }
 );
@@ -29,6 +35,7 @@ const initialState = {
   sujetoId: authStorage.getSujetoId(),
   status: "idle",
   error: null,
+  needsOnboarding: false,
 };
 
 const authSlice = createSlice({
@@ -45,6 +52,7 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => {
         state.status = "loading";
         state.error = null;
+        state.needsOnboarding = false;
       })
       .addCase(login.fulfilled, (state, action) => {
         const { token, scope, sujetos } = action.payload;
@@ -59,7 +67,8 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload ?? null;
+        state.error = action.payload?.message ?? null;
+        state.needsOnboarding = Boolean(action.payload?.needsOnboarding);
       })
       .addCase(logout.fulfilled, (state) => {
         authStorage.clear();

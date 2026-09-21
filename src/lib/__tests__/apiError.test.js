@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  isMissingPspIdentityError,
   getApiErrorMessage,
   isOnboardingScopeError,
   GENERIC_ERROR_MESSAGE,
@@ -52,5 +53,23 @@ describe("isOnboardingScopeError", () => {
     expect(isOnboardingScopeError(httpError(403, { message: "otro" }))).toBe(
       false
     );
+  });
+});
+
+describe("isMissingPspIdentityError", () => {
+  it("detects the login 401 for a mail without PSP identity", () => {
+    expect(
+      isMissingPspIdentityError(
+        httpError(401, { message: "no existe una cuenta PSP para ese mail" })
+      )
+    ).toBe(true);
+  });
+
+  it("ignores wrong credentials", () => {
+    expect(
+      isMissingPspIdentityError(
+        httpError(401, { message: "mail o contraseña incorrectos" })
+      )
+    ).toBe(false);
   });
 });
