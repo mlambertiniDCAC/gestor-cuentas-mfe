@@ -12,6 +12,7 @@ import ActivateCvuCard from "../components/ActivateCvuCard";
 import AccountSelector from "../components/AccountSelector";
 import AccountDetailsFlow from "../components/AccountDetailsFlow";
 import PaymentModal from "src/features/payments/components/PaymentModal/PaymentModal";
+import { openOnboarding } from "src/lib/onboarding";
 
 const Column = styled.div`
   display: flex;
@@ -54,11 +55,7 @@ const Home = () => {
   }
 
   if (!account) {
-    return (
-      <ActivateCvuCard
-        onActivate={() => window.location.assign(__ONBOARDING_PSP_URL__)}
-      />
-    );
+    return <ActivateCvuCard onActivate={openOnboarding} />;
   }
 
   return (

@@ -7,6 +7,7 @@ import { Typography } from "src/components/Typography";
 import { Button } from "src/components/Button";
 import { InfoMessage } from "src/components/common/InfoMessage";
 import { login } from "./authSlice";
+import { ONBOARDING_URL, openOnboarding } from "src/lib/onboarding";
 
 const Wrapper = styled.div`
   display: flex;
@@ -58,7 +59,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (needsOnboarding) {
-      window.open(__ONBOARDING_PSP_URL__, "_blank", "noopener,noreferrer");
+      openOnboarding();
     }
   }, [needsOnboarding]);
 
@@ -114,7 +115,7 @@ const LoginPage = () => {
             {error && <InfoMessage variant="danger" message={error} />}
             {needsOnboarding && (
               <OnboardingLink
-                href={__ONBOARDING_PSP_URL__}
+                href={ONBOARDING_URL}
                 target="_blank"
                 rel="noopener noreferrer"
               >
