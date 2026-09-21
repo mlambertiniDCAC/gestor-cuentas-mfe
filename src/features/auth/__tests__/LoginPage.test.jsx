@@ -41,13 +41,8 @@ describe("LoginPage", () => {
     await waitFor(() => expect(store.getState().auth.token).toBe("tok"));
   });
 
-  it("redirects to onboarding when the mail has no PSP identity", async () => {
-    const assignSpy = vi.fn();
-    const originalLocation = window.location;
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: { ...originalLocation, assign: assignSpy },
-    });
+  it("opens onboarding in a new tab when the mail has no PSP identity", async () => {
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
     post.mockRejectedValueOnce({
       response: {
         status: 401,
@@ -62,21 +57,17 @@ describe("LoginPage", () => {
       target: { value: "secreta" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Ingresar" }));
-    await waitFor(() => expect(assignSpy).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(openSpy).toHaveBeenCalledTimes(1));
+    expect(openSpy.mock.calls[0][1]).toBe("_blank");
+    const link = screen.getByText("Crear mi cuenta PSP").closest("a");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
     expect(store.getState().auth.token).toBeNull();
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: originalLocation,
-    });
+    openSpy.mockRestore();
   });
 
-  it("does not redirect on wrong password", async () => {
-    const assignSpy = vi.fn();
-    const originalLocation = window.location;
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: { ...originalLocation, assign: assignSpy },
-    });
+  it("does not open onboarding on wrong password", async () => {
+    const openSpy = vi.spyOn(window, "open").mockReturnValue(null);
     post.mockRejectedValueOnce({
       response: {
         status: 401,
@@ -94,11 +85,9 @@ describe("LoginPage", () => {
     expect(
       await screen.findByText("mail o contraseña incorrectos")
     ).toBeTruthy();
-    expect(assignSpy).not.toHaveBeenCalled();
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: originalLocation,
-    });
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(screen.queryByText("Crear mi cuenta PSP")).toBeNull();
+    openSpy.mockRestore();
   });
 
   it("shows the API error", async () => {

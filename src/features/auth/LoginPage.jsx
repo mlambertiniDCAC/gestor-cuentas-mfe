@@ -46,12 +46,20 @@ const validationSchema = Yup.object({
   password: Yup.string().required("Ingresá tu contraseña"),
 });
 
+const OnboardingLink = styled.a`
+  align-self: center;
+  color: ${({ theme }) => theme.colors.blue[500]};
+  font-weight: 600;
+`;
+
 const LoginPage = () => {
   const dispatch = useDispatch();
   const { status, error, needsOnboarding } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (needsOnboarding) window.location.assign(__ONBOARDING_PSP_URL__);
+    if (needsOnboarding) {
+      window.open(__ONBOARDING_PSP_URL__, "_blank", "noopener,noreferrer");
+    }
   }, [needsOnboarding]);
 
   return (
@@ -104,6 +112,15 @@ const LoginPage = () => {
               )}
             </Field>
             {error && <InfoMessage variant="danger" message={error} />}
+            {needsOnboarding && (
+              <OnboardingLink
+                href={__ONBOARDING_PSP_URL__}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Crear mi cuenta PSP
+              </OnboardingLink>
+            )}
             <Button
               tone="brand"
               role="primary"
