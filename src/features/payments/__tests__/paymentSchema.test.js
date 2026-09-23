@@ -14,8 +14,8 @@ const valid = {
   motivoPago: "HON",
   metodoDePago: "2",
 };
-const check = (overrides, forDay = today) =>
-  buildPaymentSchema(forDay).isValidSync({ ...valid, ...overrides });
+const check = (overrides) =>
+  buildPaymentSchema().isValidSync({ ...valid, ...overrides });
 
 describe("paymentSchema", () => {
   it("accepts a valid immediate payment", () => {
@@ -35,9 +35,10 @@ describe("paymentSchema", () => {
     expect(check({ monto: "" })).toBe(false);
   });
 
-  it("rejects past dates and accepts today", () => {
-    expect(check({ fechaProgramada: "2026-09-20" })).toBe(false);
+  it("acepta cualquier fecha: la pasada no se envía, no se rechaza", () => {
+    expect(check({ fechaProgramada: "2026-09-20" })).toBe(true);
     expect(check({ fechaProgramada: "2026-09-21" })).toBe(true);
+    expect(check({ fechaProgramada: "2026-09-30" })).toBe(true);
   });
 
   it("validates notification emails", () => {
@@ -53,7 +54,7 @@ describe("paymentSchema", () => {
 
   it("usa el día UTC como referencia, no el local (21/09 22:00 ART)", () => {
     const lateNightUtc = new Date(Date.UTC(2026, 8, 22, 1));
-    expect(check({ fechaProgramada: "2026-09-21" }, lateNightUtc)).toBe(false);
     expect(isFutureDate("2026-09-22", lateNightUtc)).toBe(false);
+    expect(isFutureDate("2026-09-23", lateNightUtc)).toBe(true);
   });
 });

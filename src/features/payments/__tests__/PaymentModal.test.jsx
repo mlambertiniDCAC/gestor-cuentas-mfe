@@ -201,6 +201,47 @@ describe("PaymentModal", () => {
     expect(post.mock.calls[0][1]).toMatchObject({ fechaProgramada });
   });
 
+  it("manda el pago de hoy como inmediato, sin fechaProgramada", async () => {
+    post.mockResolvedValueOnce({
+      data: {
+        code: 201,
+        data: {
+          movimientoId: 9,
+          montoTransferencia: 100,
+          montoRetencion: 0,
+          montoTotal: 100,
+        },
+      },
+    });
+    post.mockResolvedValueOnce({
+      data: { code: 200, data: { message: "ok" } },
+    });
+    renderModal();
+    await screen.findByRole("option", { name: "Honorarios" });
+    fireEvent.change(screen.getByLabelText("Alias destino"), {
+      target: { value: "prov.alias" },
+    });
+    fireEvent.change(screen.getByLabelText("Monto"), {
+      target: { value: "100" },
+    });
+    fireEvent.change(screen.getByLabelText("Motivo"), {
+      target: { value: "HON" },
+    });
+    fireEvent.change(screen.getByLabelText("Fecha de pago"), {
+      target: { value: format(new Date(), "yyyy-MM-dd") },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Autorizar" }));
+    expect(await screen.findByText("Pago enviado")).toBeTruthy();
+    expect(post.mock.calls[0][1]).not.toHaveProperty("fechaProgramada");
+  });
+
+  it("no muestra el selector de cuenta destino", async () => {
+    renderModal();
+    await screen.findByRole("option", { name: "Honorarios" });
+    expect(screen.queryByLabelText("Cuenta destino")).toBeNull();
+  });
+
   it("refreshes account and movements when closing after creating", async () => {
     post.mockResolvedValueOnce({
       data: {
