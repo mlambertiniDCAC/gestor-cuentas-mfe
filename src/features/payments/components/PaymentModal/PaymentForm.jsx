@@ -8,7 +8,7 @@ import {
   buildPaymentSchema,
   PAYMENT_INITIAL_VALUES,
 } from "../../lib/paymentSchema";
-import { DESTINO_TIPO, METODO_DE_PAGO_OPTIONS } from "../../lib/constants";
+import { DESTINO_TIPO } from "../../lib/constants";
 
 const Body = styled.div`
   display: grid;
@@ -67,7 +67,7 @@ const PaymentForm = ({
 }) => (
   <Formik
     initialValues={initialValues ?? PAYMENT_INITIAL_VALUES}
-    validationSchema={buildPaymentSchema(new Date())}
+    validationSchema={buildPaymentSchema()}
     onSubmit={onSubmit}
   >
     {({ values }) => (
@@ -125,16 +125,6 @@ const PaymentForm = ({
               ))}
             </Field>
             <ErrorText name="motivoPago" />
-          </FieldBox>
-          <FieldBox>
-            <Typography variant="small">Cuenta destino</Typography>
-            <Field as="select" name="metodoDePago" aria-label="Cuenta destino">
-              {METODO_DE_PAGO_OPTIONS.map((option) => (
-                <option key={option.value} value={String(option.value)}>
-                  {option.label}
-                </option>
-              ))}
-            </Field>
           </FieldBox>
           <FieldBox>
             <Typography variant="small">Fecha de pago (opcional)</Typography>

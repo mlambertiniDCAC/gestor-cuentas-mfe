@@ -1,10 +1,16 @@
 import { describe, it, expect } from "vitest";
+import { addDays, subDays } from "date-fns";
 import {
   adaptMovement,
   splitMovements,
   adaptCreateResult,
   buildCreatePayload,
 } from "../store/paymentsAdapters";
+
+const diaUtc = (date) => date.toISOString().slice(0, 10);
+const futura = diaUtc(addDays(new Date(), 5));
+const hoy = diaUtc(new Date());
+const pasada = diaUtc(subDays(new Date(), 1));
 
 const raw = (overrides) => ({
   id: 1,
@@ -98,7 +104,7 @@ describe("paymentsAdapters", () => {
           motivoPago: "HON",
           metodoDePago: "2",
           detalle: "",
-          fechaProgramada: "2026-10-01",
+          fechaProgramada: futura,
           emails: "a@b.com, c@d.com",
         },
         7
@@ -110,9 +116,28 @@ describe("paymentsAdapters", () => {
       motivo: "TRANSFERENCIA",
       metodoDePago: 2,
       motivoPago: "HON",
-      fechaProgramada: "2026-10-01",
+      fechaProgramada: futura,
       emails: ["a@b.com", "c@d.com"],
     });
+  });
+
+  it("omite la fecha cuando es hoy o anterior, para que el pago salga inmediato", () => {
+    const base = {
+      destinoTipo: "alias",
+      destino: "prov.alias",
+      monto: "100",
+      motivoPago: "HON",
+      metodoDePago: "2",
+      detalle: "",
+      emails: "",
+    };
+
+    expect(
+      buildCreatePayload({ ...base, fechaProgramada: hoy }, 7)
+    ).not.toHaveProperty("fechaProgramada");
+    expect(
+      buildCreatePayload({ ...base, fechaProgramada: pasada }, 7)
+    ).not.toHaveProperty("fechaProgramada");
   });
 
   it("builds the create payload with cbu and no optionals", () => {

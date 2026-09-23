@@ -20,7 +20,7 @@ export const isFutureDate = (value, today = new Date()) =>
 
 const emailSchema = Yup.string().email();
 
-export const buildPaymentSchema = (today = new Date()) =>
+export const buildPaymentSchema = () =>
   Yup.object({
     destinoTipo: Yup.string().oneOf(Object.values(DESTINO_TIPO)).required(),
     destino: Yup.string()
@@ -43,11 +43,7 @@ export const buildPaymentSchema = (today = new Date()) =>
     motivoPago: Yup.string().required("Elegí un motivo"),
     metodoDePago: Yup.string().oneOf(["1", "2"]).required(),
     detalle: Yup.string().max(100, "Máximo 100 caracteres"),
-    fechaProgramada: Yup.string().test(
-      "no-pasada",
-      "La fecha debe ser hoy o posterior",
-      (value) => !value || value >= toDayString(today)
-    ),
+    fechaProgramada: Yup.string(),
     emails: Yup.string().test(
       "emails",
       "Ingresá mails válidos separados por coma",
