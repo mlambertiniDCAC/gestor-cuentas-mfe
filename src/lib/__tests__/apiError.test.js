@@ -49,6 +49,16 @@ describe("isOnboardingScopeError", () => {
     ).toBe(true);
   });
 
+  it("detects the onboarding 403 in the perimeter error format", () => {
+    expect(
+      isOnboardingScopeError(
+        httpError(403, {
+          error: { code: 403, message: "la sesión todavía está en onboarding" },
+        })
+      )
+    ).toBe(true);
+  });
+
   it("ignores other 403s", () => {
     expect(isOnboardingScopeError(httpError(403, { message: "otro" }))).toBe(
       false
@@ -61,6 +71,19 @@ describe("isMissingPspIdentityError", () => {
     expect(
       isMissingPspIdentityError(
         httpError(401, { message: "no existe una cuenta PSP para ese mail" })
+      )
+    ).toBe(true);
+  });
+
+  it("detects the login 401 in the perimeter error format", () => {
+    expect(
+      isMissingPspIdentityError(
+        httpError(401, {
+          error: {
+            code: 401,
+            message: "no existe una cuenta PSP para ese mail",
+          },
+        })
       )
     ).toBe(true);
   });
