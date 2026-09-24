@@ -4,10 +4,13 @@ export const GENERIC_ERROR_MESSAGE =
 const ONBOARDING_SCOPE_MESSAGE = "la sesión todavía está en onboarding";
 const MISSING_PSP_IDENTITY_MESSAGE = "no existe una cuenta PSP para ese mail";
 
+const rawMessage = (error) =>
+  error?.response?.data?.error?.message ?? error?.response?.data?.message;
+
 export const getApiErrorMessage = (error) => {
   const response = error?.response;
   if (!response || response.status >= 500) return GENERIC_ERROR_MESSAGE;
-  const raw = response.data?.error?.message ?? response.data?.message;
+  const raw = rawMessage(error);
   if (Array.isArray(raw) && raw.length) return raw.join(". ");
   if (typeof raw === "string" && raw.trim()) return raw;
   return GENERIC_ERROR_MESSAGE;
@@ -15,12 +18,8 @@ export const getApiErrorMessage = (error) => {
 
 export const isOnboardingScopeError = (error) =>
   error?.response?.status === 403 &&
-  String(error?.response?.data?.message ?? "").includes(
-    ONBOARDING_SCOPE_MESSAGE
-  );
+  String(rawMessage(error) ?? "").includes(ONBOARDING_SCOPE_MESSAGE);
 
 export const isMissingPspIdentityError = (error) =>
   error?.response?.status === 401 &&
-  String(error?.response?.data?.message ?? "").includes(
-    MISSING_PSP_IDENTITY_MESSAGE
-  );
+  String(rawMessage(error) ?? "").includes(MISSING_PSP_IDENTITY_MESSAGE);
