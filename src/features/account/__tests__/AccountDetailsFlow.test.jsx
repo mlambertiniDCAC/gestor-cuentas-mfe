@@ -86,7 +86,7 @@ describe("AccountDetailsFlow", () => {
     await waitFor(() => expect(submit.disabled).toBe(false));
     fireEvent.click(submit);
     await waitFor(() =>
-      expect(patch).toHaveBeenCalledWith("/v1/cuentas/ext-1", {
+      expect(patch).toHaveBeenCalledWith("/v1/cuentas/ext-1/alias", {
         alias: "nuevo.alias",
       })
     );
