@@ -190,6 +190,7 @@ describe("PaymentModal", () => {
     fireEvent.change(screen.getByLabelText("Motivo"), {
       target: { value: "HON" },
     });
+    fireEvent.click(screen.getByRole("radio", { name: "Elegir fecha" }));
     fireEvent.change(screen.getByLabelText("Fecha de pago"), {
       target: { value: fechaProgramada },
     });
@@ -201,7 +202,7 @@ describe("PaymentModal", () => {
     expect(post.mock.calls[0][1]).toMatchObject({ fechaProgramada });
   });
 
-  it("manda el pago de hoy como inmediato, sin fechaProgramada", async () => {
+  it("vuelve a Hoy y no manda la fecha que había quedado elegida", async () => {
     post.mockResolvedValueOnce({
       data: {
         code: 201,
@@ -227,13 +228,38 @@ describe("PaymentModal", () => {
     fireEvent.change(screen.getByLabelText("Motivo"), {
       target: { value: "HON" },
     });
+    fireEvent.click(screen.getByRole("radio", { name: "Elegir fecha" }));
     fireEvent.change(screen.getByLabelText("Fecha de pago"), {
-      target: { value: format(new Date(), "yyyy-MM-dd") },
+      target: { value: format(addDays(new Date(), 5), "yyyy-MM-dd") },
     });
+    fireEvent.click(screen.getByRole("radio", { name: "Hoy" }));
+    expect(screen.queryByLabelText("Fecha de pago")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
     fireEvent.click(await screen.findByRole("button", { name: "Autorizar" }));
     expect(await screen.findByText("Pago enviado")).toBeTruthy();
     expect(post.mock.calls[0][1]).not.toHaveProperty("fechaProgramada");
+  });
+
+  it("arranca en Hoy y pide la fecha cuando se elige programarlo", async () => {
+    renderModal();
+    await screen.findByRole("option", { name: "Honorarios" });
+    expect(screen.getByRole("radio", { name: "Hoy" }).checked).toBe(true);
+    expect(screen.queryByLabelText("Fecha de pago")).toBeNull();
+
+    fireEvent.change(screen.getByLabelText("Alias destino"), {
+      target: { value: "prov.alias" },
+    });
+    fireEvent.change(screen.getByLabelText("Monto"), {
+      target: { value: "100" },
+    });
+    fireEvent.change(screen.getByLabelText("Motivo"), {
+      target: { value: "HON" },
+    });
+    fireEvent.click(screen.getByRole("radio", { name: "Elegir fecha" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continuar" }));
+
+    expect(await screen.findByText("Elegí una fecha")).toBeTruthy();
+    expect(post).not.toHaveBeenCalled();
   });
 
   it("no muestra el selector de cuenta destino", async () => {

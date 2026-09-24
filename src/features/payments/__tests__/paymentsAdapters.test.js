@@ -104,6 +104,7 @@ describe("paymentsAdapters", () => {
           motivoPago: "HON",
           metodoDePago: "2",
           detalle: "",
+          cuandoPagar: "fecha",
           fechaProgramada: futura,
           emails: "a@b.com, c@d.com",
         },
@@ -121,7 +122,7 @@ describe("paymentsAdapters", () => {
     });
   });
 
-  it("omite la fecha cuando es hoy o anterior, para que el pago salga inmediato", () => {
+  it("omite la fecha cuando el pago es para hoy, aunque haya una cargada", () => {
     const base = {
       destinoTipo: "alias",
       destino: "prov.alias",
@@ -133,10 +134,22 @@ describe("paymentsAdapters", () => {
     };
 
     expect(
-      buildCreatePayload({ ...base, fechaProgramada: hoy }, 7)
+      buildCreatePayload(
+        { ...base, cuandoPagar: "hoy", fechaProgramada: futura },
+        7
+      )
     ).not.toHaveProperty("fechaProgramada");
     expect(
-      buildCreatePayload({ ...base, fechaProgramada: pasada }, 7)
+      buildCreatePayload(
+        { ...base, cuandoPagar: "fecha", fechaProgramada: hoy },
+        7
+      )
+    ).not.toHaveProperty("fechaProgramada");
+    expect(
+      buildCreatePayload(
+        { ...base, cuandoPagar: "fecha", fechaProgramada: pasada },
+        7
+      )
     ).not.toHaveProperty("fechaProgramada");
   });
 

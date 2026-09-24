@@ -29,14 +29,14 @@ export const STATUS_TONE = {
   UNKNOWN: "warning",
 };
 
-export const METODO_DE_PAGO_OPTIONS = [
-  { value: 1, label: "Cuenta propia" },
-  { value: 2, label: "Cuenta de terceros" },
-];
-
 export const DESTINO_TIPO = {
   CBU: "cbu",
   ALIAS: "alias",
+};
+
+export const CUANDO_PAGAR = {
+  HOY: "hoy",
+  FECHA: "fecha",
 };
 
 export const RESULT_KIND = {

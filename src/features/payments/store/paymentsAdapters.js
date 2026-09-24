@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { formatCurrency } from "src/lib/formatters";
 import { DESTINO_TIPO, MOVEMENT_STATUS } from "../lib/constants";
-import { isFutureDate } from "../lib/paymentSchema";
+import { esProgramado } from "../lib/paymentSchema";
 
 const toAmount = (value) => {
   const parsed = typeof value === "number" ? value : parseFloat(value);
@@ -89,7 +89,7 @@ export const buildCreatePayload = (values, cuentaCvuId) => {
     metodoDePago: Number(values.metodoDePago),
     motivoPago: values.motivoPago,
     ...(values.detalle?.trim() ? { detalle: values.detalle.trim() } : {}),
-    ...(isFutureDate(values.fechaProgramada)
+    ...(esProgramado(values)
       ? { fechaProgramada: values.fechaProgramada }
       : {}),
     ...(emails.length ? { emails } : {}),

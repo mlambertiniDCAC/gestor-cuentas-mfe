@@ -13,7 +13,7 @@ import {
   fetchMovements,
 } from "../../store/paymentsActions";
 import { fetchMyAccounts } from "src/features/account/store/accountActions";
-import { isFutureDate } from "../../lib/paymentSchema";
+import { esProgramado } from "../../lib/paymentSchema";
 import { RESULT_KIND } from "../../lib/constants";
 
 const STEP = { FORM: "form", SUMMARY: "summary", RESULT: "result" };
@@ -76,9 +76,7 @@ const PaymentModal = ({ open, onClose, account }) => {
     setSubmitting(false);
     if (authorizePayment.fulfilled.match(result)) {
       setResultKind(
-        isFutureDate(values.fechaProgramada)
-          ? RESULT_KIND.SCHEDULED
-          : RESULT_KIND.SENT
+        esProgramado(values) ? RESULT_KIND.SCHEDULED : RESULT_KIND.SENT
       );
       setStep(STEP.RESULT);
       return;

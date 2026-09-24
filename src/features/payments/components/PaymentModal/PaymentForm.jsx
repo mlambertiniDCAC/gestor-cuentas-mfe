@@ -6,9 +6,10 @@ import { InfoMessage } from "src/components/common/InfoMessage";
 import { Typography } from "src/components/Typography";
 import {
   buildPaymentSchema,
+  minScheduledDate,
   PAYMENT_INITIAL_VALUES,
 } from "../../lib/paymentSchema";
-import { DESTINO_TIPO } from "../../lib/constants";
+import { CUANDO_PAGAR, DESTINO_TIPO } from "../../lib/constants";
 
 const Body = styled.div`
   display: grid;
@@ -32,10 +33,22 @@ const FieldBox = styled.label`
   grid-column: ${({ $full }) => ($full ? "1 / -1" : "auto")};
 `;
 
+const FieldGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
 const Radios = styled.div`
   display: flex;
   gap: 16px;
   grid-column: 1 / -1;
+`;
+
+const DateRadios = styled(Radios)`
+  grid-column: auto;
+  height: 40px;
+  align-items: center;
 `;
 
 const Footer = styled.div`
@@ -126,15 +139,38 @@ const PaymentForm = ({
             </Field>
             <ErrorText name="motivoPago" />
           </FieldBox>
-          <FieldBox>
-            <Typography variant="small">Fecha de pago (opcional)</Typography>
-            <Field
-              name="fechaProgramada"
-              type="date"
-              aria-label="Fecha de pago"
-            />
-            <ErrorText name="fechaProgramada" />
-          </FieldBox>
+          <FieldGroup>
+            <Typography variant="small">Fecha de pago</Typography>
+            <DateRadios role="radiogroup" aria-label="Cuándo pagar">
+              <label>
+                <Field
+                  type="radio"
+                  name="cuandoPagar"
+                  value={CUANDO_PAGAR.HOY}
+                />{" "}
+                Hoy
+              </label>
+              <label>
+                <Field
+                  type="radio"
+                  name="cuandoPagar"
+                  value={CUANDO_PAGAR.FECHA}
+                />{" "}
+                Elegir fecha
+              </label>
+            </DateRadios>
+            {values.cuandoPagar === CUANDO_PAGAR.FECHA && (
+              <>
+                <Field
+                  name="fechaProgramada"
+                  type="date"
+                  min={minScheduledDate()}
+                  aria-label="Fecha de pago"
+                />
+                <ErrorText name="fechaProgramada" />
+              </>
+            )}
+          </FieldGroup>
           <FieldBox $full>
             <Typography variant="small">Concepto (opcional)</Typography>
             <Field name="detalle" aria-label="Concepto" />
