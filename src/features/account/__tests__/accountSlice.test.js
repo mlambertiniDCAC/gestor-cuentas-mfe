@@ -100,7 +100,7 @@ describe("account store", () => {
     const result = await store.dispatch(
       updateAlias({ cuentaIdExterno: "ext-1", alias: "nuevo.alias" })
     );
-    expect(patch).toHaveBeenCalledWith("/v1/cuentas/ext-1", {
+    expect(patch).toHaveBeenCalledWith("/v1/cuentas/ext-1/alias", {
       alias: "nuevo.alias",
     });
     expect(updateAlias.fulfilled.match(result)).toBe(true);

@@ -23,7 +23,7 @@ export const updateAlias = createAsyncThunk(
   "account/updateAlias",
   async ({ cuentaIdExterno, alias }, { rejectWithValue }) => {
     try {
-      await axiosInstance.patch(`/v1/cuentas/${cuentaIdExterno}`, { alias });
+      await axiosInstance.patch(`/v1/cuentas/${cuentaIdExterno}/alias`, { alias });
       return { cuentaIdExterno, alias };
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error));
