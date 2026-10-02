@@ -34,12 +34,12 @@ describe("rootReducer", () => {
 
     store.dispatch({
       type: login.fulfilled.type,
-      payload: { token: "t", scope: "usuario", sujetos: [] },
+      payload: { token: "t" },
     });
 
     expect(store.getState().account.items).toEqual([]);
     expect(store.getState().payments.movements).toEqual([]);
     expect(store.getState().auth.token).toBe("t");
-    expect(store.getState().auth.scope).toBe("usuario");
+    expect(store.getState().auth.onboardingPendiente).toBe(false);
   });
 });

@@ -8,21 +8,13 @@ vi.mock("../../../lib/axiosInstance", () => ({
 
 const storage = {
   getToken: vi.fn(() => null),
-  getSujetoId: vi.fn(() => null),
-  getScope: vi.fn(() => null),
   setToken: vi.fn(),
-  setSujetoId: vi.fn(),
-  setScope: vi.fn(),
   clear: vi.fn(),
 };
 vi.mock("../../../lib/authStorage", () => ({ authStorage: storage }));
 
-const {
-  default: authReducer,
-  login,
-  logout,
-  markOnboarding,
-} = await import("../authSlice");
+const { default: authReducer, login, logout } = await import("../authSlice");
+const { fetchMyAccounts } = await import("../../account/store/accountActions");
 
 const makeStore = () => configureStore({ reducer: { auth: authReducer } });
 
@@ -32,14 +24,8 @@ describe("authSlice", () => {
     Object.values(storage).forEach((fn) => fn.mockClear());
   });
 
-  it("stores the session after a successful login", async () => {
-    post.mockResolvedValueOnce({
-      data: {
-        token: "tok",
-        scope: "usuario",
-        sujetos: [{ sujetoId: "38", estado: "aprobado" }],
-      },
-    });
+  it("stores only the token after a successful login", async () => {
+    post.mockResolvedValueOnce({ data: { token: "tok" } });
     const store = makeStore();
     await store.dispatch(login({ mail: "a@b.com", password: "x" }));
     expect(post).toHaveBeenCalledWith("/v1/auth/login", {
@@ -48,13 +34,28 @@ describe("authSlice", () => {
     });
     expect(store.getState().auth).toMatchObject({
       token: "tok",
-      scope: "usuario",
-      sujetoId: "38",
+      onboardingPendiente: false,
       status: "idle",
       error: null,
     });
     expect(storage.setToken).toHaveBeenCalledWith("tok");
-    expect(storage.setScope).toHaveBeenCalledWith("usuario");
+  });
+
+  it("ignores scope and sujetos if the API still sends them", async () => {
+    post.mockResolvedValueOnce({
+      data: {
+        token: "tok",
+        scope: "onboarding",
+        sujetos: [{ sujetoId: "38", estado: "en_progreso" }],
+      },
+    });
+    const store = makeStore();
+    await store.dispatch(login({ mail: "a@b.com", password: "x" }));
+    const { auth } = store.getState();
+    expect(auth.token).toBe("tok");
+    expect(auth.onboardingPendiente).toBe(false);
+    expect(auth).not.toHaveProperty("scope");
+    expect(auth).not.toHaveProperty("sujetoId");
   });
 
   it("exposes the API message when login fails", async () => {
@@ -72,7 +73,7 @@ describe("authSlice", () => {
 
   it("clears the session on logout even if the API fails", async () => {
     post.mockResolvedValueOnce({
-      data: { token: "tok", scope: "usuario", sujetos: [] },
+      data: { token: "tok" },
     });
     post.mockRejectedValueOnce(new Error("down"));
     const store = makeStore();
@@ -82,10 +83,24 @@ describe("authSlice", () => {
     expect(storage.clear).toHaveBeenCalled();
   });
 
-  it("marks the session as onboarding", () => {
+  it("marks onboarding as pending on the onboarding 403 and clears it on logout", async () => {
+    post.mockResolvedValueOnce(undefined);
     const store = makeStore();
-    store.dispatch(markOnboarding());
-    expect(store.getState().auth.scope).toBe("onboarding");
-    expect(storage.setScope).toHaveBeenCalledWith("onboarding");
+    store.dispatch({
+      type: fetchMyAccounts.rejected.type,
+      payload: { onboarding: true },
+    });
+    expect(store.getState().auth.onboardingPendiente).toBe(true);
+    await store.dispatch(logout());
+    expect(store.getState().auth.onboardingPendiente).toBe(false);
+  });
+
+  it("does not mark onboarding on other account errors", () => {
+    const store = makeStore();
+    store.dispatch({
+      type: fetchMyAccounts.rejected.type,
+      payload: { message: "error" },
+    });
+    expect(store.getState().auth.onboardingPendiente).toBe(false);
   });
 });

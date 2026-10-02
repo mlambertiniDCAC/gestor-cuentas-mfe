@@ -34,7 +34,9 @@ const AuthenticatedApp = () => (
 
 const App = () => {
   const token = useSelector((state) => state.auth.token);
-  const scope = useSelector((state) => state.auth.scope);
+  const onboardingPendiente = useSelector(
+    (state) => state.auth.onboardingPendiente
+  );
 
   useEffect(() => {
     ensureFonts();
@@ -42,7 +44,7 @@ const App = () => {
 
   let content = <AuthenticatedApp />;
   if (!token) content = <LoginPage />;
-  else if (scope === "onboarding") content = <OnboardingPendingPage />;
+  else if (onboardingPendiente) content = <OnboardingPendingPage />;
 
   return <ThemeProvider theme={lightTheme}>{content}</ThemeProvider>;
 };

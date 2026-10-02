@@ -28,7 +28,7 @@ const renderPage = () => {
 describe("LoginPage", () => {
   it("logs in with mail and password", async () => {
     post.mockResolvedValueOnce({
-      data: { token: "tok", scope: "usuario", sujetos: [] },
+      data: { token: "tok" },
     });
     const store = renderPage();
     fireEvent.change(screen.getByLabelText("Mail"), {

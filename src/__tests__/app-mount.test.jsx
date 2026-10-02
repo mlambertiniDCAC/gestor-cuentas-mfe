@@ -29,10 +29,9 @@ const renderWith = (auth) => {
   );
 };
 
-const session = (scope) => ({
+const session = (onboardingPendiente) => ({
   token: "t",
-  scope,
-  sujetoId: "1",
+  onboardingPendiente,
   status: "idle",
   error: null,
 });
@@ -43,15 +42,15 @@ describe("App mount", () => {
     expect(screen.getByLabelText("Contraseña")).toBeTruthy();
   });
 
-  it("shows the onboarding notice for an onboarding session", () => {
-    renderWith(session("onboarding"));
+  it("shows the onboarding notice while onboarding is pending", () => {
+    renderWith(session(true));
     expect(
       screen.getByText("Tu cuenta todavía está en proceso de alta")
     ).toBeTruthy();
   });
 
   it("shows the header for a user session", () => {
-    renderWith(session("usuario"));
+    renderWith(session(false));
     expect(screen.getByRole("link", { name: "Pagos" })).toBeTruthy();
   });
 });

@@ -31,8 +31,7 @@ export const logout = createAsyncThunk("auth/logout", async () => {
 
 const initialState = {
   token: authStorage.getToken(),
-  scope: authStorage.getScope(),
-  sujetoId: authStorage.getSujetoId(),
+  onboardingPendiente: false,
   status: "idle",
   error: null,
   needsOnboarding: false,
@@ -41,12 +40,7 @@ const initialState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {
-    markOnboarding: (state) => {
-      authStorage.setScope("onboarding");
-      state.scope = "onboarding";
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(login.pending, (state) => {
@@ -55,14 +49,9 @@ const authSlice = createSlice({
         state.needsOnboarding = false;
       })
       .addCase(login.fulfilled, (state, action) => {
-        const { token, scope, sujetos } = action.payload;
-        const sujetoId = sujetos?.[0]?.sujetoId ?? null;
+        const { token } = action.payload;
         authStorage.setToken(token);
-        authStorage.setScope(scope);
-        authStorage.setSujetoId(sujetoId);
         state.token = token;
-        state.scope = scope ?? null;
-        state.sujetoId = sujetoId;
         state.status = "idle";
       })
       .addCase(login.rejected, (state, action) => {
@@ -73,19 +62,16 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         authStorage.clear();
         state.token = null;
-        state.scope = null;
-        state.sujetoId = null;
+        state.onboardingPendiente = false;
         state.status = "idle";
         state.error = null;
       })
       .addCase(fetchMyAccounts.rejected, (state, action) => {
         if (action.payload?.onboarding) {
-          authStorage.setScope("onboarding");
-          state.scope = "onboarding";
+          state.onboardingPendiente = true;
         }
       });
   },
 });
 
-export const { markOnboarding } = authSlice.actions;
 export default authSlice.reducer;

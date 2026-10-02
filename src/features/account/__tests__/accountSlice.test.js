@@ -79,7 +79,7 @@ describe("account store", () => {
     );
   });
 
-  it("switches the session to onboarding on the scope 403", async () => {
+  it("marks onboarding as pending on the onboarding 403", async () => {
     get.mockRejectedValueOnce({
       response: {
         status: 403,
@@ -89,7 +89,7 @@ describe("account store", () => {
     const store = makeStore();
     await store.dispatch(fetchMyAccounts());
     expect(store.getState().account.status).toBe("failed");
-    expect(store.getState().auth.scope).toBe("onboarding");
+    expect(store.getState().auth.onboardingPendiente).toBe(true);
   });
 
   it("updates the alias", async () => {
