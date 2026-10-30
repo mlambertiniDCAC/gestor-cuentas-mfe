@@ -7,6 +7,7 @@ const initialState = {
   selectedId: null,
   status: "idle",
   error: null,
+  errorForbidden: false,
   aliasStatus: "idle",
   aliasError: null,
 };
@@ -28,6 +29,7 @@ const accountSlice = createSlice({
       .addCase(fetchMyAccounts.pending, (state) => {
         state.status = "loading";
         state.error = null;
+        state.errorForbidden = false;
       })
       .addCase(fetchMyAccounts.fulfilled, (state, action) => {
         state.items = action.payload;
@@ -41,6 +43,7 @@ const accountSlice = createSlice({
       .addCase(fetchMyAccounts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload?.message ?? null;
+        state.errorForbidden = action.payload?.forbidden ?? false;
       })
       .addCase(updateAlias.pending, (state) => {
         state.aliasStatus = "loading";

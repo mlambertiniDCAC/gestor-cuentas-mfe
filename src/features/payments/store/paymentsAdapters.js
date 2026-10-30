@@ -1,5 +1,12 @@
 import { format } from "date-fns";
 import { formatCurrency } from "src/lib/formatters";
+import {
+  AUTHORIZE_REJECTED_MESSAGE,
+  GENERIC_ERROR_MESSAGE,
+  PERMISSION_MESSAGES,
+  PERMISSION_MOTIVO,
+  isPermissionMotivo,
+} from "src/lib/apiError";
 import { DESTINO_TIPO, MOVEMENT_STATUS } from "../lib/constants";
 import { esProgramado } from "../lib/paymentSchema";
 
@@ -94,4 +101,33 @@ export const buildCreatePayload = (values, cuentaCvuId) => {
       : {}),
     ...(emails.length ? { emails } : {}),
   };
+};
+
+export const adaptBatchResult = (raw) => {
+  const items = Array.isArray(raw) ? raw : [];
+  const result = { authorized: [], rejected: [], failed: [] };
+  items.forEach((item) => {
+    if (item.exitoso) result.authorized.push(item.id);
+    else if (item.motivo === PERMISSION_MOTIVO.USUARIO_SIN_PERMISO) {
+      result.rejected.push({ id: item.id, motivo: item.motivo });
+    } else {
+      result.failed.push({
+        id: item.id,
+        error: isPermissionMotivo(item.motivo)
+          ? PERMISSION_MESSAGES[item.motivo]
+          : (item.error ?? null),
+      });
+    }
+  });
+  return result;
+};
+
+export const buildBatchMessage = ({ authorized, rejected, failed }) => {
+  const texts =
+    !authorized.length && rejected.length ? [AUTHORIZE_REJECTED_MESSAGE] : [];
+  if (failed.length) {
+    const errors = [...new Set(failed.map((f) => f.error).filter(Boolean))];
+    texts.push(...(errors.length ? errors : [GENERIC_ERROR_MESSAGE]));
+  }
+  return texts.length ? texts.join(". ") : null;
 };

@@ -1,7 +1,11 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "src/lib/axiosInstance";
 import { unwrap } from "src/lib/apiResponse";
-import { getApiErrorMessage, isOnboardingScopeError } from "src/lib/apiError";
+import {
+  getApiErrorMessage,
+  isForbidden,
+  isOnboardingScopeError,
+} from "src/lib/apiError";
 import { adaptAccounts } from "./accountAdapters";
 
 export const fetchMyAccounts = createAsyncThunk(
@@ -14,6 +18,7 @@ export const fetchMyAccounts = createAsyncThunk(
       return rejectWithValue({
         message: getApiErrorMessage(error),
         onboarding: isOnboardingScopeError(error),
+        forbidden: isForbidden(error),
       });
     }
   }
@@ -23,7 +28,9 @@ export const updateAlias = createAsyncThunk(
   "account/updateAlias",
   async ({ cuentaIdExterno, alias }, { rejectWithValue }) => {
     try {
-      await axiosInstance.patch(`/v1/cuentas/${cuentaIdExterno}/alias`, { alias });
+      await axiosInstance.patch(`/v1/cuentas/${cuentaIdExterno}/alias`, {
+        alias,
+      });
       return { cuentaIdExterno, alias };
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error));
