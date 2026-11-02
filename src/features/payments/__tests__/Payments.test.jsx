@@ -123,6 +123,18 @@ describe("Payments page", () => {
     );
   });
 
+  it("does nothing on 'Autorizar seleccionados' without selection", async () => {
+    renderPage();
+    await screen.findByText("Pendiente uno");
+    const button = screen.getByRole("button", {
+      name: "Autorizar seleccionados",
+    });
+    expect(button.disabled).toBe(false);
+    fireEvent.click(button);
+    await waitFor(() => expect(button.disabled).toBe(false));
+    expect(post).not.toHaveBeenCalled();
+  });
+
   it("shows the error of a failed cancel", async () => {
     post.mockRejectedValueOnce({
       response: {

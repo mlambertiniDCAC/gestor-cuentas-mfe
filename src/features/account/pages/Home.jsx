@@ -23,7 +23,7 @@ const Column = styled.div`
 const Home = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { items, selectedId, status, error } = useSelector(
+  const { items, selectedId, status, error, errorForbidden } = useSelector(
     (state) => state.account
   );
   const account = useSelector(selectSelectedAccount);
@@ -36,6 +36,10 @@ const Home = () => {
 
   if (status === "idle" || (status === "loading" && !items.length)) {
     return <Skeleton width="100%" height="240px" />;
+  }
+
+  if (status === "failed" && errorForbidden) {
+    return <InfoMessage variant="warning" message={error} />;
   }
 
   if (status === "failed") {

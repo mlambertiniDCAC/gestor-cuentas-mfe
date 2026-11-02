@@ -1,20 +1,31 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "src/lib/axiosInstance";
 import { unwrap } from "src/lib/apiResponse";
-import { getApiErrorMessage } from "src/lib/apiError";
 import {
+  PERMISSION_MOTIVO,
+  getApiErrorMessage,
+  getPermissionMotivo,
+  isForbidden,
+} from "src/lib/apiError";
+import { TRACKING_EVENTS, trackEvent } from "src/lib/tracking";
+import {
+  adaptBatchResult,
   adaptCreateResult,
   adaptMovement,
   buildCreatePayload,
 } from "./paymentsAdapters";
 
 const withApiError =
-  (fn) =>
+  (fn, onError) =>
   async (arg, { rejectWithValue }) => {
     try {
       return await fn(arg);
     } catch (error) {
-      return rejectWithValue(getApiErrorMessage(error));
+      onError?.(error, arg);
+      return rejectWithValue(getApiErrorMessage(error), {
+        motivo: getPermissionMotivo(error),
+        forbidden: isForbidden(error),
+      });
     }
   };
 
@@ -50,9 +61,39 @@ export const createPayment = createAsyncThunk(
 
 export const authorizePayment = createAsyncThunk(
   "payments/authorize",
-  withApiError(async (id) => {
-    await axiosInstance.post(`/v1/movimientos/${id}/autorizar`);
-    return id;
+  withApiError(
+    async (id) => {
+      trackEvent(TRACKING_EVENTS.authorizeClick());
+      await axiosInstance.post(`/v1/movimientos/${id}/autorizar`);
+      trackEvent(TRACKING_EVENTS.paymentReleased());
+      return id;
+    },
+    (error) => {
+      if (
+        getPermissionMotivo(error) === PERMISSION_MOTIVO.USUARIO_SIN_PERMISO
+      ) {
+        trackEvent(TRACKING_EVENTS.authorizationRejected());
+      }
+    }
+  )
+);
+
+export const authorizeBatch = createAsyncThunk(
+  "payments/authorizeBatch",
+  withApiError(async (ids) => {
+    trackEvent(TRACKING_EVENTS.authorizeClick());
+    const response = await axiosInstance.post(
+      "/v1/movimientos/autorizar/batch",
+      { ids }
+    );
+    const result = adaptBatchResult(unwrap(response));
+    result.authorized.forEach(() =>
+      trackEvent(TRACKING_EVENTS.paymentReleased())
+    );
+    result.rejected.forEach(() =>
+      trackEvent(TRACKING_EVENTS.authorizationRejected())
+    );
+    return result;
   })
 );
 

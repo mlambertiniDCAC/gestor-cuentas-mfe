@@ -28,7 +28,18 @@ npm run lint
 
 ## Endpoints usados
 
-`POST /v1/auth/login` · `POST /v1/auth/logout` · `POST /v1/auth/refresh` · `GET /v1/cuentas/me` · `PATCH /v1/cuentas/:cuentaIdExterno` · `GET /v1/motivos-pago` · `GET /v1/movimientos?cuentaCvuId=` · `POST /v1/movimientos` · `POST /v1/movimientos/:id/autorizar` · `POST /v1/movimientos/:id/cancelar`
+`POST /v1/auth/login` · `POST /v1/auth/logout` · `POST /v1/auth/refresh` · `GET /v1/cuentas/me` · `PATCH /v1/cuentas/:cuentaIdExterno` · `GET /v1/motivos-pago` · `GET /v1/movimientos?cuentaCvuId=` · `POST /v1/movimientos` · `POST /v1/movimientos/:id/autorizar` · `POST /v1/movimientos/autorizar/batch` · `POST /v1/movimientos/:id/cancelar`
+
+## Falta de permisos
+
+Ante un 403 con `error.motivo`, el MFE muestra el texto propio del motivo (si el motivo falta o es desconocido, el `message` del servidor). Un 403 no se reintenta.
+
+- `SUJETO_SIN_CVU`: "Tu sociedad no tiene PSP habilitado."
+- `USUARIO_SIN_PERMISO`: "No tenés permiso para realizar esta acción."
+- `SUJETO_SIN_CREDITOS`: "Tu sociedad no tiene créditos habilitados."
+- `KYC_PENDIENTE`: "Tenés que completar la validación de tu identidad para operar."
+
+Tracking: si `VITE_MATOMO_URL` y `VITE_MATOMO_SITE_ID` no están vacías, se emite un POST con `axios` plano (sin `Authorization`) con `idsite`, `rec=1` y `e_c` / `e_a` para `Interacción / Autorizar Pagos`, `Navegación / PagoLiberado` e `Interacción / AutorizacionRechazada`. Sin alguna de las dos variables no se envía nada.
 
 ## Fuera de alcance
 
@@ -53,3 +64,7 @@ Con apigateway-psp y ms-psp levantados (`CORS_ORIGINS` incluye `http://localhost
 7. "Pagar" → "Dejar pendiente" → aparece en `/pagos › Pendientes`; "Cancelar" lo saca; otro pendiente → "Autorizar" lo ejecuta.
 8. Con el webhook de ingresos configurado, una transferencia al CVU aparece como `+ $` en Historial y actualiza el saldo.
 9. Cerrar sesión → vuelve al login y `localStorage` no tiene claves `gestor_cuentas_*`.
+10. Usuario sin `sujeto-cvu` → aviso "Tu sociedad no tiene PSP habilitado." en Inicio y en Pagos, sin "Reintentar" ni "Activar cuenta CVU".
+11. Usuario con alcance `vista` → ver funciona; "Autorizar" muestra "No tenés permiso para realizar esta acción." y el pago queda pendiente con la nota.
+12. Dos pendientes con permisos mixtos → "Autorizar seleccionados": uno sale de Pendientes y el otro queda marcado; reintentar solo el marcado muestra "No tenés permisos suficientes para autorizar estos pagos".
+13. Con `VITE_MATOMO_URL` y `VITE_MATOMO_SITE_ID` definidas, un POST por evento en la pestaña Red, sin `Authorization`; sin alguna de las dos, ningún envío.

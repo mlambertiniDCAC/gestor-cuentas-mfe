@@ -9,11 +9,16 @@ import Tabs from "src/components/Tabs";
 import { fetchMyAccounts } from "src/features/account/store/accountActions";
 import { selectSelectedAccount } from "src/features/account/store/accountSlice";
 import {
+  authorizeBatch,
   authorizePayment,
   cancelPayment,
   fetchMovements,
 } from "../store/paymentsActions";
-import { clearActionError, selectSplitMovements } from "../store/paymentsSlice";
+import {
+  clearActionError,
+  clearPermissionRejected,
+  selectSplitMovements,
+} from "../store/paymentsSlice";
 import MovementsTable from "../components/MovementsTable";
 
 const Column = styled.div`
@@ -22,16 +27,27 @@ const Column = styled.div`
   gap: 16px;
 `;
 
+const BATCH_BUSY = "batch";
+
 const TAB = { PENDING: "pending", SCHEDULED: "scheduled", HISTORY: "history" };
 
 const Payments = () => {
   const dispatch = useDispatch();
   const account = useSelector(selectSelectedAccount);
   const accountStatus = useSelector((state) => state.account.status);
-  const { status, error, actionError } = useSelector((state) => state.payments);
+  const accountError = useSelector((state) => state.account.error);
+  const accountErrorForbidden = useSelector(
+    (state) => state.account.errorForbidden
+  );
+  const { status, error, errorForbidden, actionError, permissionRejected } =
+    useSelector((state) => state.payments);
   const { pending, scheduled, history } = useSelector(selectSplitMovements);
   const [activeTab, setActiveTab] = useState(TAB.PENDING);
   const [busyId, setBusyId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const selectedPending = selectedIds.filter((id) =>
+    pending.some((m) => m.id === id)
+  );
 
   useEffect(() => {
     if (accountStatus === "idle") dispatch(fetchMyAccounts());
@@ -43,6 +59,35 @@ const Payments = () => {
 
   useEffect(() => () => dispatch(clearActionError()), [dispatch]);
 
+  useEffect(() => () => dispatch(clearPermissionRejected()), [dispatch]);
+
+  const toggleSelected = (id) =>
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
+    );
+
+  const toggleAll = () =>
+    setSelectedIds(
+      selectedPending.length === pending.length ? [] : pending.map((m) => m.id)
+    );
+
+  const runBatch = async () => {
+    if (!selectedPending.length) return;
+    setBusyId(BATCH_BUSY);
+    const result = await dispatch(authorizeBatch(selectedPending));
+    setBusyId(null);
+    if (authorizeBatch.fulfilled.match(result)) {
+      setSelectedIds([]);
+      dispatch(fetchMovements(account.id));
+      dispatch(fetchMyAccounts());
+    }
+  };
+
+  const noteFor = (movement) =>
+    permissionRejected[movement.id]
+      ? "No autorizable por falta de permiso"
+      : null;
+
   const runAction = async (thunk, id) => {
     setBusyId(id);
     const result = await dispatch(thunk(id));
@@ -52,6 +97,22 @@ const Payments = () => {
       dispatch(fetchMyAccounts());
     }
   };
+
+  const forbiddenMessage =
+    accountStatus === "failed" && accountErrorForbidden
+      ? accountError
+      : status === "failed" && errorForbidden
+        ? error
+        : null;
+
+  if (forbiddenMessage) {
+    return (
+      <Column>
+        <Typography variant="h3">Pagos</Typography>
+        <InfoMessage variant="warning" message={forbiddenMessage} />
+      </Column>
+    );
+  }
 
   if (accountStatus !== "succeeded" && !account) {
     return <Skeleton width="100%" height="240px" />;
@@ -106,7 +167,7 @@ const Payments = () => {
       <Typography variant="h3">Pagos</Typography>
       <Tabs tabs={tabs} activeId={activeTab} onChange={setActiveTab} />
       {actionError && <InfoMessage variant="danger" message={actionError} />}
-      {status === "failed" && (
+      {status === "failed" && !errorForbidden && (
         <Column>
           <InfoMessage variant="danger" message={error} />
           <Button
@@ -124,12 +185,34 @@ const Payments = () => {
         !scheduled.length &&
         !history.length && <Skeleton width="100%" height="160px" />}
       {status === "succeeded" && activeTab === TAB.PENDING && (
-        <MovementsTable
-          movements={pending}
-          emptyText="No tenés pagos pendientes de autorizar."
-          dateField="fechaTexto"
-          renderActions={renderPendingActions}
-        />
+        <>
+          {pending.length > 0 && (
+            <Button
+              tone="brand"
+              role="primary"
+              size="small"
+              type="button"
+              loading={busyId === BATCH_BUSY}
+              disabled={busyId !== null}
+              onClick={runBatch}
+            >
+              Autorizar seleccionados
+            </Button>
+          )}
+          <MovementsTable
+            movements={pending}
+            emptyText="No tenés pagos pendientes de autorizar."
+            dateField="fechaTexto"
+            renderActions={renderPendingActions}
+            noteFor={noteFor}
+            selection={{
+              selectedIds: selectedPending,
+              onToggle: toggleSelected,
+              onToggleAll: toggleAll,
+              disabled: busyId !== null,
+            }}
+          />
+        </>
       )}
       {status === "succeeded" && activeTab === TAB.SCHEDULED && (
         <MovementsTable

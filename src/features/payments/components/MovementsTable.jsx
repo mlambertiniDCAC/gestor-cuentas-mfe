@@ -30,7 +30,19 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const MovementsTable = ({ movements, emptyText, dateField, renderActions }) => {
+const Note = styled.div`
+  font-size: 12px;
+  color: ${({ theme }) => theme.colors.yellow[900]};
+`;
+
+const MovementsTable = ({
+  movements,
+  emptyText,
+  dateField,
+  renderActions,
+  noteFor,
+  selection,
+}) => {
   if (!movements.length) {
     return <Typography variant="regular">{emptyText}</Typography>;
   }
@@ -39,6 +51,17 @@ const MovementsTable = ({ movements, emptyText, dateField, renderActions }) => {
     <Table>
       <thead>
         <tr>
+          {selection && (
+            <th>
+              <input
+                type="checkbox"
+                aria-label="Seleccionar todos los pagos"
+                checked={selection.selectedIds.length === movements.length}
+                disabled={selection.disabled}
+                onChange={selection.onToggleAll}
+              />
+            </th>
+          )}
           <th>Fecha</th>
           <th>Destino / origen</th>
           <th>Concepto</th>
@@ -50,6 +73,17 @@ const MovementsTable = ({ movements, emptyText, dateField, renderActions }) => {
       <tbody>
         {movements.map((movement) => (
           <tr key={movement.id}>
+            {selection && (
+              <td>
+                <input
+                  type="checkbox"
+                  aria-label={`Seleccionar pago ${movement.id}`}
+                  checked={selection.selectedIds.includes(movement.id)}
+                  disabled={selection.disabled}
+                  onChange={() => selection.onToggle(movement.id)}
+                />
+              </td>
+            )}
             <td>{movement[dateField]}</td>
             <td>{movement.contraparte || "-"}</td>
             <td>{movement.detalle || "-"}</td>
@@ -58,6 +92,7 @@ const MovementsTable = ({ movements, emptyText, dateField, renderActions }) => {
             </Amount>
             <td>
               <StatusBadge estado={movement.estado ?? undefined} />
+              {noteFor?.(movement) && <Note>{noteFor(movement)}</Note>}
             </td>
             {renderActions && (
               <td>
@@ -85,6 +120,13 @@ MovementsTable.propTypes = {
   emptyText: PropTypes.string.isRequired,
   dateField: PropTypes.oneOf(["fechaTexto", "fechaEjecucionTexto"]).isRequired,
   renderActions: PropTypes.func,
+  noteFor: PropTypes.func,
+  selection: PropTypes.shape({
+    selectedIds: PropTypes.arrayOf(PropTypes.number).isRequired,
+    onToggle: PropTypes.func.isRequired,
+    onToggleAll: PropTypes.func.isRequired,
+    disabled: PropTypes.bool,
+  }),
 };
 
 export default MovementsTable;
