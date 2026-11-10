@@ -22,7 +22,7 @@ const raw = (overrides) => ({
   detalle: "Honorarios",
   fechaCreacion: "2026-09-20T13:00:00.000Z",
   fechaEjecucion: null,
-  estado: "COMPLETADO",
+  estado: "REALIZADO",
   transferenciaDetalle: {
     cuentaDestinoAlias: "prov.alias",
     cuentaDestinoCvu: null,
@@ -38,7 +38,7 @@ describe("paymentsAdapters", () => {
       esCredito: false,
       montoFormateado: "- $ 1.500,00",
       contraparte: "prov.alias",
-      estado: "COMPLETADO",
+      estado: "REALIZADO",
       fechaTexto: "20/09/2026",
     });
   });
@@ -55,13 +55,35 @@ describe("paymentsAdapters", () => {
 
   it("splits pending, scheduled and history", () => {
     const movements = [
-      raw({ id: 1, estado: "EN_PROGRESO" }),
-      raw({ id: 2, estado: "EN_PROGRESO", movimientoPadreId: 1 }),
+      raw({ id: 1, estado: "PENDIENTE_AUTORIZACION" }),
+      raw({ id: 2, estado: "PENDIENTE_AUTORIZACION", movimientoPadreId: 1 }),
       raw({
         id: 3,
         estado: "PROGRAMADO",
         fechaEjecucion: "2026-10-01T00:00:00.000Z",
       }),
+      raw({
+        id: 4,
+        estado: "REALIZADO",
+        fechaCreacion: "2026-09-01T00:00:00.000Z",
+      }),
+      raw({
+        id: 5,
+        estado: "RECHAZADO",
+        fechaCreacion: "2026-09-10T00:00:00.000Z",
+      }),
+    ].map(adaptMovement);
+    const { pending, scheduled, history } = splitMovements(movements);
+    expect(pending.map((m) => m.id)).toEqual([1]);
+    expect(scheduled.map((m) => m.id)).toEqual([3]);
+    expect(history.map((m) => m.id)).toEqual([5, 4]);
+  });
+
+  it("splits pending, scheduled and history with the previous state names", () => {
+    const movements = [
+      raw({ id: 1, estado: "EN_PROGRESO" }),
+      raw({ id: 2, estado: "EN_PROGRESO", movimientoPadreId: 1 }),
+      raw({ id: 3, estado: "PROGRAMADO" }),
       raw({
         id: 4,
         estado: "COMPLETADO",

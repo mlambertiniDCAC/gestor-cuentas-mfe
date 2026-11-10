@@ -33,7 +33,7 @@ const movements = [
     id: 1,
     monto: 100,
     tipo: "DEBITO",
-    estado: "EN_PROGRESO",
+    estado: "PENDIENTE_AUTORIZACION",
     detalle: "Pendiente uno",
     fechaCreacion: "2026-09-20T00:00:00Z",
     transferenciaDetalle: { cuentaDestinoAlias: "prov.alias" },
@@ -51,7 +51,7 @@ const movements = [
     id: 3,
     monto: 300,
     tipo: "CREDITO",
-    estado: "COMPLETADO",
+    estado: "REALIZADO",
     detalle: "Ingreso tres",
     fechaCreacion: "2026-09-18T00:00:00Z",
   },
@@ -140,7 +140,8 @@ describe("Payments page", () => {
       response: {
         status: 400,
         data: {
-          message: "Solo se pueden cancelar movimientos en estado EN_PROGRESO.",
+          message:
+            "Solo se pueden cancelar movimientos en estado PENDIENTE_AUTORIZACION.",
         },
       },
     });
@@ -149,7 +150,7 @@ describe("Payments page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
     expect(
       await screen.findByText(
-        "Solo se pueden cancelar movimientos en estado EN_PROGRESO."
+        "Solo se pueden cancelar movimientos en estado PENDIENTE_AUTORIZACION."
       )
     ).toBeTruthy();
   });
