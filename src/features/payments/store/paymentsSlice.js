@@ -3,7 +3,7 @@ import {
   AUTHORIZE_REJECTED_MESSAGE,
   PERMISSION_MOTIVO,
 } from "src/lib/apiError";
-import { MOVEMENT_STATUS } from "../lib/constants";
+import { PENDING_STATUSES } from "../lib/constants";
 import {
   authorizeBatch,
   authorizePayment,
@@ -55,7 +55,7 @@ const paymentsSlice = createSlice({
         state.movements = action.payload;
         const pendingIds = new Set(
           action.payload
-            .filter((m) => m.estado === MOVEMENT_STATUS.EN_PROGRESO)
+            .filter((m) => PENDING_STATUSES.includes(m.estado))
             .map((m) => String(m.id))
         );
         Object.keys(state.permissionRejected).forEach((id) => {
