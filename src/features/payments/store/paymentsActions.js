@@ -15,19 +15,21 @@ import {
   buildCreatePayload,
 } from "./paymentsAdapters";
 
-const withApiError =
-  (fn, onError) =>
-  async (arg, { rejectWithValue }) => {
-    try {
-      return await fn(arg);
-    } catch (error) {
-      onError?.(error, arg);
-      return rejectWithValue(getApiErrorMessage(error), {
-        motivo: getPermissionMotivo(error),
-        forbidden: isForbidden(error),
-      });
-    }
-  };
+const withApiError = (fn, onError) => async (arg, thunkApi) => {
+  const { rejectWithValue } = thunkApi;
+  try {
+    return await fn(arg, thunkApi);
+  } catch (error) {
+    onError?.(error, arg);
+    return rejectWithValue(getApiErrorMessage(error), {
+      motivo: getPermissionMotivo(error),
+      forbidden: isForbidden(error),
+    });
+  }
+};
+
+const movimientosDelSujeto = (getState) =>
+  `/v1/sujetos/${getState().auth.sujetoId}/movimientos`;
 
 export const fetchMotivos = createAsyncThunk(
   "payments/fetchMotivos",
@@ -62,9 +64,11 @@ export const createPayment = createAsyncThunk(
 export const authorizePayment = createAsyncThunk(
   "payments/authorize",
   withApiError(
-    async (id) => {
+    async (id, { getState }) => {
       trackEvent(TRACKING_EVENTS.authorizeClick());
-      await axiosInstance.post(`/v1/movimientos/${id}/autorizar`);
+      await axiosInstance.post(
+        `${movimientosDelSujeto(getState)}/${id}/autorizar`
+      );
       trackEvent(TRACKING_EVENTS.paymentReleased());
       return id;
     },
@@ -80,10 +84,10 @@ export const authorizePayment = createAsyncThunk(
 
 export const authorizeBatch = createAsyncThunk(
   "payments/authorizeBatch",
-  withApiError(async (ids) => {
+  withApiError(async (ids, { getState }) => {
     trackEvent(TRACKING_EVENTS.authorizeClick());
     const response = await axiosInstance.post(
-      "/v1/movimientos/autorizar/batch",
+      `${movimientosDelSujeto(getState)}/autorizar/batch`,
       { ids }
     );
     const result = adaptBatchResult(unwrap(response));

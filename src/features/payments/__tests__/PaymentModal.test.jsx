@@ -16,6 +16,7 @@ vi.mock("../../../lib/axiosInstance", () => ({
   },
 }));
 
+localStorage.setItem("gestor_cuentas_sujeto_id", "7");
 const { rootReducer } = await import("../../../store/store");
 const { default: PaymentModal } =
   await import("../components/PaymentModal/PaymentModal");
@@ -92,7 +93,9 @@ describe("PaymentModal", () => {
     expect(screen.getByText("$ 3,00")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Autorizar" }));
     expect(await screen.findByText("Pago enviado")).toBeTruthy();
-    expect(post).toHaveBeenLastCalledWith("/v1/movimientos/9/autorizar");
+    expect(post).toHaveBeenLastCalledWith(
+      "/v1/sujetos/7/movimientos/9/autorizar"
+    );
   });
 
   it("leaves the payment pending", async () => {

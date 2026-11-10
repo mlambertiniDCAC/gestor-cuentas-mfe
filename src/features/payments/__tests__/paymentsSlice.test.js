@@ -18,11 +18,14 @@ const {
   fetchMovements,
   createPayment,
   authorizePayment,
+  authorizeBatch,
   cancelPayment,
 } = await import("../store/paymentsActions");
 
 const makeStore = () =>
-  configureStore({ reducer: { payments: paymentsReducer } });
+  configureStore({
+    reducer: { payments: paymentsReducer, auth: () => ({ sujetoId: 7 }) },
+  });
 
 describe("payments store", () => {
   beforeEach(() => {
@@ -136,12 +139,24 @@ describe("payments store", () => {
     );
   });
 
+  it("authorizes a batch through the subject route", async () => {
+    post.mockResolvedValueOnce({
+      data: { code: 200, data: [{ id: 1, exitoso: true }] },
+    });
+    const store = makeStore();
+    await store.dispatch(authorizeBatch([1]));
+    expect(post).toHaveBeenCalledWith(
+      "/v1/sujetos/7/movimientos/autorizar/batch",
+      { ids: [1] }
+    );
+  });
+
   it("authorizes and cancels by id", async () => {
     post.mockResolvedValue({ data: { code: 200, data: { message: "ok" } } });
     const store = makeStore();
     await store.dispatch(authorizePayment(9));
     await store.dispatch(cancelPayment(9));
-    expect(post).toHaveBeenCalledWith("/v1/movimientos/9/autorizar");
+    expect(post).toHaveBeenCalledWith("/v1/sujetos/7/movimientos/9/autorizar");
     expect(post).toHaveBeenCalledWith("/v1/movimientos/9/cancelar");
   });
 

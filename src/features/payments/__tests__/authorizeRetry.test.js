@@ -14,7 +14,9 @@ const { default: paymentsReducer } = await import("../store/paymentsSlice");
 const { authorizePayment } = await import("../store/paymentsActions");
 
 const makeStore = () =>
-  configureStore({ reducer: { payments: paymentsReducer } });
+  configureStore({
+    reducer: { payments: paymentsReducer, auth: () => ({ sujetoId: 7 }) },
+  });
 
 const forbidden = () => ({
   response: {

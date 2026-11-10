@@ -16,6 +16,7 @@ vi.mock("../../../lib/axiosInstance", () => ({
   },
 }));
 
+localStorage.setItem("gestor_cuentas_sujeto_id", "7");
 const { rootReducer } = await import("../../../store/store");
 const { default: Payments } = await import("../pages/Payments");
 
@@ -116,7 +117,7 @@ describe("Payments page", () => {
     const callsBefore = get.mock.calls.length;
     fireEvent.click(screen.getByRole("button", { name: "Autorizar" }));
     await waitFor(() =>
-      expect(post).toHaveBeenCalledWith("/v1/movimientos/1/autorizar")
+      expect(post).toHaveBeenCalledWith("/v1/sujetos/7/movimientos/1/autorizar")
     );
     await waitFor(() =>
       expect(get.mock.calls.length).toBeGreaterThan(callsBefore)
