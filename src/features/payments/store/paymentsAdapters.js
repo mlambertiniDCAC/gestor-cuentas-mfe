@@ -7,7 +7,11 @@ import {
   PERMISSION_MOTIVO,
   isPermissionMotivo,
 } from "src/lib/apiError";
-import { DESTINO_TIPO, MOVEMENT_STATUS } from "../lib/constants";
+import {
+  DESTINO_TIPO,
+  MOVEMENT_STATUS,
+  PENDING_STATUSES,
+} from "../lib/constants";
 import { esProgramado } from "../lib/paymentSchema";
 
 const toAmount = (value) => {
@@ -52,7 +56,7 @@ const byDateDesc = (a, b) =>
 
 export const splitMovements = (movements) => ({
   pending: movements.filter(
-    (m) => !m.esHijo && m.estado === MOVEMENT_STATUS.EN_PROGRESO
+    (m) => !m.esHijo && PENDING_STATUSES.includes(m.estado)
   ),
   scheduled: movements.filter(
     (m) => !m.esHijo && m.estado === MOVEMENT_STATUS.PROGRAMADO
@@ -60,7 +64,7 @@ export const splitMovements = (movements) => ({
   history: movements
     .filter(
       (m) =>
-        m.estado !== MOVEMENT_STATUS.EN_PROGRESO &&
+        !PENDING_STATUSES.includes(m.estado) &&
         m.estado !== MOVEMENT_STATUS.PROGRAMADO
     )
     .sort(byDateDesc),

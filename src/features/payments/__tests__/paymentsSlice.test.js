@@ -51,14 +51,14 @@ describe("payments store", () => {
             id: 1,
             monto: 10,
             tipo: "DEBITO",
-            estado: "EN_PROGRESO",
+            estado: "PENDIENTE_AUTORIZACION",
             fechaCreacion: "2026-09-20T00:00:00Z",
           },
           {
             id: 2,
             monto: 20,
             tipo: "CREDITO",
-            estado: "COMPLETADO",
+            estado: "REALIZADO",
             fechaCreacion: "2026-09-19T00:00:00Z",
           },
         ],
@@ -150,14 +150,15 @@ describe("payments store", () => {
       response: {
         status: 400,
         data: {
-          message: "Solo se pueden cancelar movimientos en estado EN_PROGRESO.",
+          message:
+            "Solo se pueden cancelar movimientos en estado PENDIENTE_AUTORIZACION.",
         },
       },
     });
     const store = makeStore();
     await store.dispatch(cancelPayment(9));
     expect(store.getState().payments.actionError).toBe(
-      "Solo se pueden cancelar movimientos en estado EN_PROGRESO."
+      "Solo se pueden cancelar movimientos en estado PENDIENTE_AUTORIZACION."
     );
   });
 });

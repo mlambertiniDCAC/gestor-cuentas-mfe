@@ -1,15 +1,24 @@
 export const MOVEMENT_STATUS = {
-  EN_PROGRESO: "EN_PROGRESO",
+  PENDIENTE_AUTORIZACION: "PENDIENTE_AUTORIZACION",
   PROGRAMADO: "PROGRAMADO",
 };
 
+export const PENDING_STATUSES = [
+  MOVEMENT_STATUS.PENDIENTE_AUTORIZACION,
+  "EN_PROGRESO",
+];
+
 export const STATUS_LABEL = {
+  ENVIADO: "Iniciado",
+  PENDIENTE_AUTORIZACION: "Pendiente de autorización",
+  PROGRAMADO: "Programado",
+  REALIZADO: "Completado",
+  RECHAZADO: "Fallido",
+  CANCELADO: "Cancelado",
   INICIADO: "Iniciado",
   EN_PROGRESO: "Pendiente de autorización",
-  PROGRAMADO: "Programado",
   COMPLETADO: "Completado",
   FALLIDO: "Fallido",
-  CANCELADO: "Cancelado",
   IN_PROGRESS: "En proceso",
   COMPLETED: "Completado",
   FAILED: "Fallido",
@@ -17,12 +26,16 @@ export const STATUS_LABEL = {
 };
 
 export const STATUS_TONE = {
+  ENVIADO: "info",
+  PENDIENTE_AUTORIZACION: "warning",
+  PROGRAMADO: "info",
+  REALIZADO: "success",
+  RECHAZADO: "danger",
+  CANCELADO: "neutral",
   INICIADO: "info",
   EN_PROGRESO: "warning",
-  PROGRAMADO: "info",
   COMPLETADO: "success",
   FALLIDO: "danger",
-  CANCELADO: "neutral",
   IN_PROGRESS: "info",
   COMPLETED: "success",
   FAILED: "danger",
